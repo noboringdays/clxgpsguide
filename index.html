@@ -20,31 +20,27 @@ button:active { background-color: #2980b9; }
 <div class="container">
 <h2>📍 스마트 오디오 투어</h2>
 <button id="startBtn">투어 시작하기</button>
-
 <div id="location-list"></div>
 </div>
 
-<!-- 오디오 파일 3개 -->
-<audio id="audio1" src="audio1.mp3" preload="auto"></audio>
-<audio id="audio2" src="audio2.mp3" preload="auto"></audio>
-<audio id="audio3" src="audio3.mp3" preload="auto"></audio>
+<!-- 오디오 파일: 실제 깃허브에 올린 파일명과 같아야 합니다 -->
+<audio id="audio1" src="audio1.mp3"></audio>
+<audio id="audio2" src="audio2.mp3"></audio>
+<audio id="audio3" src="audio3.mp3"></audio>
 
+<!-- 👇 여기서부터 자바스크립트(엔진) 입니다. 절대 지우지 마세요! -->
 <script>
-// 🚨 여기에 실제 목표 위도, 경도 입력 (구글 지도 참고)
 const TARGETS = [
-{ id: 1, name: "첫 번째 장소", lat: 35.509189, lon: 129.349106, audioId: "audio1", played: false },
-{ id: 2, name: "두 번째 장소", lat: 35.506626, lon: 129.349999, audioId: "audio2", played: false },
-{ id: 3, name: "세 번째 장소", lat: 35.505960, lon: 129.354015, audioId: "audio3", played: false }
+{ id: 1, name: "첫 번째 장소", lat: 37.5665, lon: 126.9780, audioId: "audio1", played: false },
+{ id: 2, name: "두 번째 장소", lat: 37.5511, lon: 126.9882, audioId: "audio2", played: false },
+{ id: 3, name: "세 번째 장소", lat: 37.5759, lon: 126.9768, audioId: "audio3", played: false }
 ];
 
-// 목표 반경 (이 미터 안에 들어오면 오디오 재생, 기본 50m)
 const TRIGGER_RADIUS_METERS = 50;
-
 const startBtn = document.getElementById('startBtn');
 const listContainer = document.getElementById('location-list');
 let watchId = null;
 
-// 화면 그리기
 function initUI() {
 listContainer.innerHTML = '';
 TARGETS.forEach(target => {
@@ -60,7 +56,6 @@ listContainer.appendChild(div);
 }
 initUI();
 
-// 거리 계산 (미터)
 function getDistance(lat1, lon1, lat2, lon2) {
 const R = 6371e3;
 const φ1 = lat1 * Math.PI / 180;
@@ -70,5 +65,78 @@ const Δλ = (lon2 - lon1) * Math.PI / 180;
 const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
 return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
+startBtn.addEventListener('click', () => {
+try {
+// 버튼을 누르자마자 즉각 반응하도록 문구 변경
+startBtn.innerText = "GPS 신호 찾는 중...";
+startBtn.style.backgroundColor = "#e67e22";
+startBtn.disabled = true;
 
-// 시작 버튼 클릭
+// 오류를 일으키던 강제 재생 코드를 지우고, 안전하게 '준비(load)'만 시킵니다.
+document.getElementById('audio1').load();
+document.getElementById('audio2').load();
+document.getElementById('audio3').load();
+
+if (!navigator.geolocation) {
+alert("이 기기에서는 GPS 위치 기능을 지원하지 않습니다.");
+return;
+}
+
+// GPS 추적 시작
+watchId = navigator.geolocation.watchPosition(
+(position) => {
+const currentLat = position.coords.latitude;
+const currentLon = position.coords.longitude;
+
+let allCompleted = true;
+
+TARGETS.forEach(target => {
+const statusEl = document.getElementById(`status-${target.id}`);
+const cardEl = document.getElementById(`card-${target.id}`);
+
+if (!target.played) {
+allCompleted = false;
+const distance = Math.round(getDistance(currentLat, currentLon, target.lat, target.lon));
+
+if (distance <= TRIGGER_RADIUS_METERS) {
+target.played = true;
+document.getElementById(target.audioId).play();
+
+statusEl.innerText = "✅ 도달 완료! 오디오 재생 중";
+statusEl.style.color = "#27ae60";
+cardEl.classList.add("completed");
+} else {
+// 해당 위치가 아닐 경우 안내 문구
+statusEl.innerText = "❌ 해당 가이드 위치가 아닙니다.";
+statusEl.style.color = "#e74c3c";
+}
+}
+});
+
+if (allCompleted) {
+navigator.geolocation.clearWatch(watchId);
+startBtn.innerText = "모든 가이드 완료 🎉";
+startBtn.style.backgroundColor = "#27ae60";
+}
+},
+(error) => {
+// 사용자가 위치 권한을 거부했거나 GPS가 꺼져있을 때 경고창 띄움
+alert("GPS 위치 권한을 허용해야 작동합니다. 스마트폰 설정을 확인해주세요.");
+startBtn.innerText = "투어 시작하기";
+startBtn.style.backgroundColor = "#3498db";
+startBtn.disabled = false;
+},
+{ enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+);
+
+} catch (error) {
+// 알 수 없는 에러가 났을 때 화면에 경고창을 띄워 원인을 알려줌
+alert("코드 실행 중 오류 발생: " + error.message);
+startBtn.innerText = "투어 시작하기";
+startBtn.disabled = false;
+}
+});
+</script>
+</body>
+</html>
+
