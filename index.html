@@ -3,52 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>다중 GPS 오디오 가이드</title>
+<title>스마트 GPS 오디오 가이드</title>
 <style>
 body { font-family: 'Malgun Gothic', sans-serif; text-align: center; padding: 20px; background-color: #f8f9fa; color: #333; }
 .container { max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
 h2 { color: #2c3e50; }
-button { padding: 15px 30px; font-size: 18px; font-weight: bold; background-color: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-bottom: 10px; }
+button { padding: 15px 30px; font-size: 18px; font-weight: bold; background-color: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-bottom: 20px; }
 button:active { background-color: #2980b9; }
-.location-card { background: #ecf0f1; margin-bottom: 15px; padding: 15px; border-radius: 8px; text-align: left; transition: all 0.3s ease; }
-.location-name { font-weight: bold; font-size: 18px; margin-bottom: 5px; color: #2c3e50; }
-.status-text { font-size: 15px; color: #e67e22; font-weight: bold; }
+.location-card { background: #ecf0f1; margin-bottom: 15px; padding: 20px; border-radius: 8px; text-align: left; transition: all 0.3s ease; }
+.location-name { font-weight: bold; font-size: 18px; margin-bottom: 10px; color: #2c3e50; }
+.status-text { font-size: 15px; font-weight: bold; color: #7f8c8d; }
 .completed { background: #d4efdf; border-left: 5px solid #27ae60; }
-#debug-info { margin-top: 15px; font-size: 12px; color: #7f8c8d; text-align: left; background: #eee; padding: 10px; border-radius: 5px; }
 </style>
 </head>
 <body>
 <div class="container">
-<h2>📍 스마트 GPS 오디오 가이드</h2>
-<button id="startBtn">위치 추적 시작</button>
-<p style="font-size:13px; color:#e74c3c; margin-bottom: 20px;">시작 버튼을 누르고 잠시 기다려주세요.</p>
+<h2>📍 스마트 오디오 투어</h2>
+<button id="startBtn">투어 시작하기</button>
 
 <div id="location-list"></div>
-
-<!-- 디버깅용: 현재 내 폰의 GPS 상태를 눈으로 직접 확인하는 창 -->
-<div id="debug-info">📡 GPS 연결 대기 중...</div>
 </div>
 
-<!-- 오디오 파일 -->
+<!-- 오디오 파일 3개 -->
 <audio id="audio1" src="audio1.mp3" preload="auto"></audio>
 <audio id="audio2" src="audio2.mp3" preload="auto"></audio>
 <audio id="audio3" src="audio3.mp3" preload="auto"></audio>
 
 <script>
-// 🚨 여기에 실제 목표 위도, 경도 입력
+// 🚨 여기에 실제 목표 위도, 경도 입력 (구글 지도 참고)
 const TARGETS = [
 { id: 1, name: "첫 번째 장소", lat: 35.509189, lon: 129.349106, audioId: "audio1", played: false },
 { id: 2, name: "두 번째 장소", lat: 35.506626, lon: 129.349999, audioId: "audio2", played: false },
 { id: 3, name: "세 번째 장소", lat: 35.505960, lon: 129.354015, audioId: "audio3", played: false }
 ];
 
+// 목표 반경 (이 미터 안에 들어오면 오디오 재생, 기본 50m)
 const TRIGGER_RADIUS_METERS = 50;
 
 const startBtn = document.getElementById('startBtn');
 const listContainer = document.getElementById('location-list');
-const debugInfo = document.getElementById('debug-info');
 let watchId = null;
 
+// 화면 그리기
 function initUI() {
 listContainer.innerHTML = '';
 TARGETS.forEach(target => {
@@ -57,7 +53,7 @@ div.className = 'location-card';
 div.id = `card-${target.id}`;
 div.innerHTML = `
 <div class="location-name">${target.name}</div>
-<div class="status-text" id="status-${target.id}">대기 중</div>
+<div class="status-text" id="status-${target.id}">대기 중 (시작 버튼을 눌러주세요)</div>
 `;
 listContainer.appendChild(div);
 });
@@ -74,3 +70,5 @@ const Δλ = (lon2 - lon1) * Math.PI / 180;
 const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
 return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
+
+// 시작 버튼 클릭
