@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPS 오디오 알리미</title>
+<style>
+body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f4f4f9; }
+button { padding: 15px 30px; font-size: 18px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+p { font-size: 18px; margin-top: 20px; color: #333; }
+</style>
+</head>
+<body>
+<h2>📍 GPS 오디오 알리미</h2>
+<!-- 브라우저 정책상 사용자가 버튼을 한번 눌러야 오디오 재생이 허용됩니다 -->
+<button id="startBtn">위치 추적 시작</button>
+<p id="status">대기 중...</p>
+<p id="distanceMsg">현재 위치 확인 중...</p>
+
+<!-- 여기에 본인의 오디오 파일 이름을 넣으세요 -->
+<audio id="myAudio" src="audio.mp3"></audio>
+
+<script>
+// 🚨 여기에 목표 위치의 위도와 경도를 입력하세요 (구글 지도 참고)
+const TARGET_LAT = 35.531962;
+const TARGET_LON = 129.294201;
+// 🚨 몇 미터(m) 이내에 접근했을 때 재생할지 설정하세요 (예: 50미터)
+const TRIGGER_RADIUS_METERS = 10;
+
+const startBtn = document.getElementById('startBtn');
+const status = document.getElementById('status');
+const distanceMsg = document.getElementById('distanceMsg');
+const myAudio = document.getElementById('myAudio');
+
+let watchId = null;
+let hasPlayed = false;
+
+// 두 좌표 간의 거리를 미터(m) 단위로 계산하는 공식 (Haversine 공식)
+function getDistance(lat1, lon1, lat2, lon2) {
+const R = 6371e3; // 지구의 반지름 (미터)
+const φ1 = lat1 * Math.PI / 180;
+const φ2 = lat2 * Math.PI / 180;
+const Δφ = (lat2 - lat1) * Math.PI / 180;
+const Δλ = (lon2 - lon1) * Math.PI / 180;
+const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+return R * c;
+}
+
+startBtn.addEventListener('click', () => {
+// 오디오 권한 활성화 (무음으로 한번 재생)
+myAudio.play().then(() => { myAudio.pause(); myAudio.currentTime = 0; }).catch(e => console.log("오디오 준비 완료"));
+
+if (!navigator.geolocation) {
+status.innerText = "이 브라우저에서는 GPS를 지원하지 않습니다.";
+return;
+}
+
+status.innerText = "GPS 추적 중... (이동해 보세요)";
+startBtn.style.display = 'none';
+
+// 실시간 위치 추적 시작
+watchId = navigator.geolocation.watchPosition(
+(position) => {
+const currentLat = position.coords.latitude;
+const currentLon = position.coords.longitude;
+const distance = Math.round(getDistance(currentLat, currentLon, TARGET_LAT, TARGET_LON));
+
+distanceMsg.innerText = `목표까지 남은 거리: 약 ${distance} 미터`;
+
+// 목표 반경 이내로 들어오고, 아직 재생된 적이 없다면
+if (distance <= TRIGGER_RADIUS_METERS && !hasPlayed) {
+status.innerText = "목표 위치에 도달했습니다! 오디오를 재생합니다.";
+status.style.color = "green";
+myAudio.play();
+hasPlayed = true; // 중복 재생 방지
+navigator.geolocation.clearWatch(watchId); // 도착 후 추적 종료 (배터리 절약)
+}
+},
+(error) => { status.innerText = "위치 정보를 가져올 수 없습니다. GPS(위치) 권한을 허용해 주세요."; },
+{ enableHighAccuracy: true, maximumAge: 0, timeout: 5000 } // 가장 정확한 GPS 요청
+);
+});
+</script>
+</body>
+</html>
