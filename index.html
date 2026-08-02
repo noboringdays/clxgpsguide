@@ -6,24 +6,27 @@
     <title>CLX 투어 자동 내레이션 프로그램</title>
     <style>
         body { font-family: 'Malgun Gothic', sans-serif; text-align: center; padding: 20px; background-color: #f8f9fa; color: #333; }
-        .container { max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h2 { color: #00529b; margin-bottom: 5px; }
-        p.subtitle { color: #7f8c8d; font-size: 14px; margin-bottom: 25px; }
+        p.subtitle { color: #7f8c8d; font-size: 14px; margin-bottom: 20px; }
         .btn-group { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        button { padding: 15px 30px; font-size: 18px; font-weight: bold; background-color: #00529b; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-bottom: 20px; }
+        button { padding: 15px 30px; font-size: 18px; font-weight: bold; background-color: #00529b; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-bottom: 15px; }
         button.lang-btn { width: auto; padding: 10px 20px; background-color: #28a745; margin-bottom: 0; }
         button.lang-btn:active { background-color: #218838; }
-        .location-card { background: #ecf0f1; margin-bottom: 15px; padding: 20px; border-radius: 8px; text-align: left; transition: all 0.3s ease; }
-        .location-name { font-weight: bold; font-size: 18px; margin-bottom: 10px; color: #2c3e50; }
-        .status-text { font-size: 15px; font-weight: bold; color: #7f8c8d; }
+        
+        .location-list-box { max-height: 400px; overflow-y: auto; margin-top: 15px; padding-right: 5px; }
+        .location-card { background: #ecf0f1; margin-bottom: 10px; padding: 15px; border-radius: 8px; text-align: left; transition: all 0.3s ease; }
+        .location-header { display: flex; justify-content: space-between; align-items: center; }
+        .location-name { font-weight: bold; font-size: 16px; color: #2c3e50; }
+        .status-text { font-size: 13px; font-weight: bold; color: #7f8c8d; margin-top: 5px; }
         .completed { background: #d4efdf; border-left: 5px solid #27ae60; }
         .active { background: #fff3cd; border-left: 5px solid #f39c12; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>🚌 CLX 투어 자동 내레이션 프로그램</h2>
-        <p class="subtitle">버스 이동 경로에 맞춰 다국어 오디오가 자동 재생됩니다.</p>
+        <h2>🚌 CLX 투어 자동 내레이션</h2>
+        <p class="subtitle">버스 이동 경로에 맞춰 12개 주요 포인트의 안내가 자동 재생됩니다.</p>
         
         <button id="mainStartBtn" onclick="initiateTourStart()">투어 시작하기</button>
 
@@ -36,21 +39,30 @@
             </div>
         </div>
 
-        <div id="location-list"></div>
+        <div id="location-list" class="location-list-box"></div>
     </div>
 
-    <!-- 오디오 파일은 JavaScript에서 동적으로 src를 설정합니다. -->
+    <!-- 단일 오디오 엘리먼트를 재사용합니다 -->
     <audio id="playerAudio" preload="auto"></audio>
 
     <script>
-        // 🚨 울산CLX 버스 투어의 실제 목적지 위도/경도로 수정해주세요.
+        // 🚨 총 12개 장소의 실제 위도(lat)와 경도(lon)로 수정하세요.
         const LOCATIONS = [
-            { id: 1, name: "울산CLX 본관", lat: 35.51037, lon: 129.34669, played: false },
-            { id: 2, name: "#1CDU 옆", lat: 35.5100, lon: 129.3100, played: false },
-            { id: 3, name: "내항부두", lat: 35.5200, lon: 129.3200, played: false }
+            { id: 1, name: "1. 울산CLX 본관", lat: 35.51037, lon: 129.34669, played: false },
+            { id: 2, name: "2. #1 CDU 공장", lat: 35.51100, lon: 129.34700, played: false },
+            { id: 3, name: "3. 중후석유화학 공정", lat: 35.51200, lon: 129.34800, played: false },
+            { id: 4, name: "4. FCC 공장", lat: 35.51300, lon: 129.34900, played: false },
+            { id: 5, name: "5. 동력공장", lat: 35.51400, lon: 129.35000, played: false },
+            { id: 6, name: "6. 내항 부두 1부두", lat: 35.51500, lon: 129.35100, played: false },
+            { id: 7, name: "7. 원유 저장탱크 지역", lat: 35.51600, lon: 129.35200, played: false },
+            { id: 8, name: "8. 출하장 (육상출하)", lat: 35.51700, lon: 129.35300, played: false },
+            { id: 9, name: "9. 종합조종실 (FCR)", lat: 35.51800, lon: 129.35400, played: false },
+            { id: 10, name: "10. 환경처리장", lat: 35.51900, lon: 129.35500, played: false },
+            { id: 11, name: "11. SK지오센트릭 공장", lat: 35.52000, lon: 129.35600, played: false },
+            { id: 12, name: "12. 투어 종료 지점 (정문)", lat: 35.52100, lon: 129.35700, played: false }
         ];
 
-        // 버스 투어 특성상 반경을 조금 넓게 잡는 것이 좋습니다. (기본 100m로 설정)
+        // 감지 반경 (기본 100m)
         const TRIGGER_RADIUS_METERS = 100; 
         
         const listContainer = document.getElementById('location-list');
@@ -59,14 +71,16 @@
         const playerAudio = document.getElementById('playerAudio');
 
         let watchId = null;
-        let currentTargetIndex = 0; // 현재 버스가 찾아가야 할 다음 목적지 순서
-        let selectedLanguage = ''; // 선택된 언어 코드 (ko, en, jp)
+        let currentTargetIndex = 0; // 0 ~ 11 순서 제어
+        let selectedLanguage = ''; 
+        let wakeLock = null;
 
-        // 오디오 파일 이름 규칙 (예: audio_ko_1.mp3, audio_en_1.mp3)
+        // 파일명 규칙: audio_ko_1.mp3 ~ audio_ko_12.mp3
         function getAudioFileName(locationId, lang) {
             return `audio_${lang}_${locationId}.mp3`;
         }
 
+        // 화면 12개 카드 UI 초기화
         function initUI() {
             listContainer.innerHTML = '';
             LOCATIONS.forEach(location => {
@@ -74,7 +88,9 @@
                 div.className = 'location-card';
                 div.id = `card-${location.id}`;
                 div.innerHTML = `
-                    <div class="location-name">${location.name}</div>
+                    <div class="location-header">
+                        <span class="location-name">${location.name}</span>
+                    </div>
                     <div class="status-text" id="status-${location.id}">대기 중</div>
                 `;
                 listContainer.appendChild(div);
@@ -82,6 +98,7 @@
         }
         initUI();
 
+        // 두 좌표 간 거리 계산 함수 (Haversine Formula)
         function getDistance(lat1, lon1, lat2, lon2) {
             const R = 6371e3; 
             const φ1 = lat1 * Math.PI / 180;
@@ -92,10 +109,10 @@
             return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
         }
 
-        // 투어 시작 버튼 클릭 (GPS 활성화 및 언어 선택 창 표시)
+        // 1단계: 투어 시작 버튼 클릭 (GPS 권한 확인)
         function initiateTourStart() {
             try {
-                mainStartBtn.innerText = "GPS 신호 찾는 중...";
+                mainStartBtn.innerText = "GPS 신호 확인 중...";
                 mainStartBtn.style.backgroundColor = "#e67e22";
                 mainStartBtn.disabled = true;
 
@@ -105,55 +122,62 @@
                     return;
                 }
 
-                // GPS 권한 요청 및 준비 (실제 추적은 언어 선택 후 시작)
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        console.log("GPS 준비 완료:", position.coords.latitude, position.coords.longitude);
-                        mainStartBtn.style.display = 'none'; // 시작 버튼 숨기기
-                        languageSelectionDiv.style.display = 'block'; // 언어 선택 창 표시
-                        
-                        // 오디오 권한 획득용: 모든 오디오 로드 (무음)
-                        // Note: playerAudio를 사용하므로 이 부분은 필요 없어짐.
+                        mainStartBtn.style.display = 'none'; 
+                        languageSelectionDiv.style.display = 'block'; // 언어 선택창 표시
                     },
                     (error) => {
-                        alert("GPS 위치 권한을 허용해주세요. (스마트폰 설정 확인)");
+                        alert("GPS 위치 권한을 허용해주세요. (스마트폰 위치 서비스 켜기)");
                         resetUIForError();
                     },
                     { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
                 );
-
             } catch (error) {
-                alert("코드 에러: " + error.message);
+                alert("오류 발생: " + error.message);
                 resetUIForError();
             }
         }
 
-        // 언어 선택 후 투어 시작
-        function setLanguageAndStartTour(lang) {
+        // 2단계: 언어 선택 완료 및 모바일 오디오 재생 권한 획득
+        async function setLanguageAndStartTour(lang) {
             selectedLanguage = lang;
-            languageSelectionDiv.style.display = 'none'; // 언어 선택 창 숨기기
-            mainStartBtn.style.display = 'block'; // 시작 버튼 다시 표시 (텍스트 업데이트용)
-            mainStartBtn.innerText = "투어 진행 중... (GPS 수신 중)";
-            mainStartBtn.style.backgroundColor = "#00529b"; // 원래 색상으로 복구
-            mainStartBtn.disabled = true; // 다시 비활성화
+            languageSelectionDiv.style.display = 'none';
+            mainStartBtn.style.display = 'block';
+            mainStartBtn.innerText = "🚌 투어 진행 중 (GPS 수신 중)";
+            mainStartBtn.style.backgroundColor = "#00529b";
+            mainStartBtn.disabled = true;
 
-            // 현재 찾아가야 할 첫 번째 장소의 UI를 노란색(활성)으로 변경
-            if (LOCATIONS.length > 0) {
-                document.getElementById(`card-${LOCATIONS[0].id}`).classList.add("active");
-                document.getElementById(`status-${LOCATIONS[0].id}`).innerText = "첫 번째 장소로 이동 중...";
+            // 💡 [중요] 모바일 오디오 자동 재생 제한 풀기 (User Interaction 락 해제)
+            try {
+                playerAudio.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="; // 무음 팟
+                await playerAudio.play();
+                playerAudio.pause();
+            } catch (e) {
+                console.log("오디오 사전 잠금해제 시도 완료");
             }
-            
-            // 실시간 GPS 추적 시작
+
+            // 화면 꺼짐 방지 요청 (지원 기기 한정)
+            requestWakeLock();
+
+            // 첫 번째 장소 카드 활성화
+            if (LOCATIONS.length > 0) {
+                updateCardActive(LOCATIONS[0].id, "첫 번째 목적지로 이동 중...");
+            }
+
             startGPSMonitoring();
         }
 
+        // GPS 실시간 추적 시작
         function startGPSMonitoring() {
             watchId = navigator.geolocation.watchPosition(
                 (position) => {
+                    // 12개 장소를 모두 방문했으면 종료
                     if (currentTargetIndex >= LOCATIONS.length) {
                         navigator.geolocation.clearWatch(watchId);
-                        mainStartBtn.innerText = "CLX 투어가 완료되었습니다 🎉";
+                        mainStartBtn.innerText = "🎉 모든 CLX 투어가 완료되었습니다!";
                         mainStartBtn.style.backgroundColor = "#27ae60";
+                        releaseWakeLock();
                         return;
                     }
 
@@ -163,65 +187,85 @@
                     const location = LOCATIONS[currentTargetIndex];
                     const distance = Math.round(getDistance(currentLat, currentLon, location.lat, location.lon));
                     const statusEl = document.getElementById(`status-${location.id}`);
-                    const cardEl = document.getElementById(`card-${location.id}`);
 
+                    // 해당 지점 반경 이내 진입 & 미재생 상태일 때
                     if (distance <= TRIGGER_RADIUS_METERS && !location.played) {
                         location.played = true;
                         
-                        // 선택된 언어에 맞는 오디오 파일 로드 및 재생
+                        // 오디오 파일 지정 및 재생
                         playerAudio.src = getAudioFileName(location.id, selectedLanguage);
-                        playerAudio.muted = false; // 혹시 모를 음소거 해제
-                        playerAudio.play();
-                        
-                        statusEl.innerText = "✅ 도착 완료! 안내 방송 재생 중";
+                        playerAudio.play().catch(err => console.error("재생 오류:", err));
+
+                        statusEl.innerText = "✅ 도착! 안내 방송 재생 중...";
                         statusEl.style.color = "#27ae60";
+                        
+                        const cardEl = document.getElementById(`card-${location.id}`);
                         cardEl.classList.remove("active");
                         cardEl.classList.add("completed");
 
-                        // 다음 목표 장소로 타겟 순서 이동
+                        // 오디오 재생이 끝나거나 진행 시 다음 장소로 타겟 업데이트
                         currentTargetIndex++;
                         if (currentTargetIndex < LOCATIONS.length) {
-                            const nextLocation = LOCATIONS[currentTargetIndex];
-                            document.getElementById(`card-${nextLocation.id}`).classList.add("active");
-                            document.getElementById(`status-${nextLocation.id}`).innerText = "다음 장소로 이동 중...";
+                            const nextLoc = LOCATIONS[currentTargetIndex];
+                            updateCardActive(nextLoc.id, "다음 장소로 이동 중...");
+                            // 다음 장소 카드가 보이도록 자동 스크롤
+                            document.getElementById(`card-${nextLoc.id}`).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                         }
                     } else if (!location.played) {
-                        // 아직 해당 위치가 아닐 경우 (활성화된 장소에만 표시)
+                        // 아직도 이동 중인 현재 목적지 카드 표시
+                        const cardEl = document.getElementById(`card-${location.id}`);
                         if (cardEl.classList.contains("active")) {
-                             statusEl.innerText = `❌ 아직 해당 위치가 아닙니다. (${distance}m 남음)`;
-                             statusEl.style.color = "#e74c3c";
+                            statusEl.innerText = `🚌 이동 중... (남은 거리: 약 ${distance}m)`;
+                            statusEl.style.color = "#d35400";
                         }
-                       
                     }
                 },
                 (error) => {
-                    alert("GPS 신호가 약하거나 위치 권한이 없습니다. (스마트폰 설정 확인)");
-                    resetUIForError();
+                    console.warn("GPS 신호 수신 불안정");
                 },
                 { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
             );
         }
 
-        // 에러 발생 시 UI 초기 상태로 복구
+        function updateCardActive(id, message) {
+            const cardEl = document.getElementById(`card-${id}`);
+            const statusEl = document.getElementById(`status-${id}`);
+            cardEl.classList.add("active");
+            statusEl.innerText = message;
+            statusEl.style.color = "#f39c12";
+        }
+
+        // 화면 꺼짐 방지 (Wake Lock) API
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                } catch (err) {
+                    console.log("Wake Lock 미지원 또는 거부됨");
+                }
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLock !== null) {
+                wakeLock.release();
+                wakeLock = null;
+            }
+        }
+
         function resetUIForError() {
             mainStartBtn.innerText = "투어 시작하기";
             mainStartBtn.style.backgroundColor = "#00529b";
             mainStartBtn.disabled = false;
             languageSelectionDiv.style.display = 'none';
-            // 모든 위치 카드 상태 초기화 (옵션)
-            LOCATIONS.forEach(loc => {
-                const cardEl = document.getElementById(`card-${loc.id}`);
-                const statusEl = document.getElementById(`status-${loc.id}`);
-                cardEl.classList.remove("active", "completed");
-                statusEl.innerText = "대기 중";
-                statusEl.style.color = "#7f8c8d";
-            });
-            currentTargetIndex = 0; // 순서 초기화
-            LOCATIONS.forEach(loc => loc.played = false); // 재생 상태 초기화
+            initUI();
+            currentTargetIndex = 0;
+            LOCATIONS.forEach(loc => loc.played = false);
             if (watchId) {
                 navigator.geolocation.clearWatch(watchId);
                 watchId = null;
             }
+            releaseWakeLock();
         }
     </script>
 </body>
