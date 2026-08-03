@@ -48,22 +48,22 @@
     <script>
         // 🚨 총 12개 장소의 실제 위도(lat)와 경도(lon)로 수정하세요.
         const LOCATIONS = [
-            { id: 1, name: "1. 인사말", lat: 35.303611, lon: 129.205159, played: false },
-            { id: 2, name: "2. #1 BTX", lat: 35.302999, lon: 129.205802, played: false },
-            { id: 3, name: "3. 제1정유공장", lat: 35.302745, lon: 129.210377, played: false },
-            { id: 4, name: "4. 파이프라인", lat: 35.302454, lon: 129.211019, played: false },
-            { id: 5, name: "5. 제2수처리장", lat: 35.302087, lon: 129.211768, played: false },
-            { id: 6, name: "6. 윤활유공장", lat: 35.301639, lon: 129.212774, played: false },
-            { id: 7, name: "7. 내항부두", lat: 35.300982, lon: 129.215001, played: false },
-            { id: 8, name: "8. 장거리송유관", lat: 35.301697, lon: 129.212789, played: false },
-            { id: 9, name: "9. 소방시설", lat: 35.302263, lon: 129.211542, played: false },
-            { id: 10, name: "10. #2VRDS", lat: 35.302627, lon: 129.210752, played: false },
-            { id: 11, name: "11. 조정실", lat: 35.302876, lon: 129.210229, played: false },
-            { id: 12, name: "12. 작별인사", lat: 35.303292, lon: 129.205256, played: false }
+            { id: 1, name: "1. 인사말", lat: 35.51028, lon: 129.34730, played: false },
+            { id: 2, name: "2. #1 BTX", lat: 35.50834, lon: 129.34945, played: false },
+            { id: 3, name: "3. 제1정유공장", lat: 35.50720, lon: 129.35203, played: false },
+            { id: 4, name: "4. 파이프라인", lat: 35.50640, lon: 129.35366, played: false },
+            { id: 5, name: "5. 제2수처리장", lat: 35.50585, lon: 129.35502, played: false },
+            { id: 6, name: "6. 윤활유공장", lat: 35.50428, lon: 129.35836, played: false },
+            { id: 7, name: "7. 내항부두", lat: 35.50121, lon: 129.36484, played: false },
+            { id: 8, name: "8. 장거리송유관", lat: 35.50502, lon: 129.35711, played: false },
+            { id: 9, name: "9. 소방시설", lat: 35.50636, lon: 129.35422, played: false },
+            { id: 10, name: "10. #2VRDS", lat: 35.50720, lon: 129.35205, played: false },
+            { id: 11, name: "11. 조정실", lat: 35.50832, lon: 129.34980, played: false },
+            { id: 12, name: "12. 작별인사", lat: 35.50832, lon: 129.34980, played: false }
         ];
 
-        // 감지 반경 (기본 100m)
-        const TRIGGER_RADIUS_METERS = 100; 
+        // 감지 반경 (기본 50m)
+        const TRIGGER_RADIUS_METERS = 50; 
         
         const listContainer = document.getElementById('location-list');
         const mainStartBtn = document.getElementById('mainStartBtn');
