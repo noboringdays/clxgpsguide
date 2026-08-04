@@ -29,7 +29,7 @@
 <body>
     <div class="container">
         <h2>🚌 CLX 투어 자동 내레이션</h2>
-        <p class="subtitle">버스 이동 경로에 맞춰 12개 주요 포인트의 안내가 자동 재생됩니다.</p>
+        <p class="subtitle">버스 이동 경로에 맞춰 13개 주요 포인트의 안내가 자동 재생됩니다.</p>
         
         <button id="mainStartBtn" onclick="initiateTourStart()">투어 시작하기</button>
 
@@ -53,19 +53,21 @@
     <audio id="playerAudio" preload="auto"></audio>
 
     <script>
+        // 🚨 13번 장소의 실제 이름 및 위도(lat), 경도(lon)로 수정해 주세요.
         const LOCATIONS = [
             { id: 1, name: "1. 인사말", lat: 35.51028, lon: 129.34730, played: false },
             { id: 2, name: "2. #1 BTX", lat: 35.50834, lon: 129.34945, played: false },
             { id: 3, name: "3. 제1정유공장", lat: 35.50720, lon: 129.35203, played: false },
-            { id: 4, name: "4. 파이프라인", lat: 35.50640, lon: 129.35366, played: false },
-            { id: 5, name: "5. 제2수처리장", lat: 35.50585, lon: 129.35502, played: false },
-            { id: 6, name: "6. 윤활유공장", lat: 35.50428, lon: 129.35836, played: false },
-            { id: 7, name: "7. 내항부두", lat: 35.50121, lon: 129.36484, played: false },
-            { id: 8, name: "8. 장거리송유관", lat: 35.50502, lon: 129.35711, played: false },
+            { id: 4, name: "4. 윤활유공장", lat: 35.50428, lon: 129.35836, played: false },
+            { id: 5, name: "5. 파이프라인", lat: 35.50445, lon: 129.36086, played: false },
+            { id: 6, name: "6. 내항부두", lat: 35.50121, lon: 129.36484, played: false },
+            { id: 7, name: "7. 장거리송유관", lat: 35.50462, lon: 129.35786, played: false },
+            { id: 8, name: "8. 제2수처리장", lat: 35.50549, lon: 129.35591, played: false },
             { id: 9, name: "9. 소방시설", lat: 35.50636, lon: 129.35422, played: false },
             { id: 10, name: "10. #2VRDS", lat: 35.50720, lon: 129.35205, played: false },
-            { id: 11, name: "11. 조정실", lat: 35.50832, lon: 129.34980, played: false },
-            { id: 12, name: "12. 작별인사", lat: 35.50832, lon: 129.34980, played: false }
+            { id: 11, name: "11. 조정실", lat: 35.50809, lon: 129.35024, played: false },
+            { id: 12, name: "12. 상생복지관", lat: 35.50868, lon: 129.34894, played: false },
+            { id: 13, name: "13. 작별인사", lat: 35.50966, lon: 129.34787, played: false }
         ];
 
         const TRIGGER_RADIUS_METERS = 50; 
@@ -81,6 +83,7 @@
         let selectedLanguage = ''; 
         let wakeLock = null;
 
+        // 파일명 규칙: audio_ko_1.mp3 ~ audio_ko_13.mp3
         function getAudioFileName(locationId, lang) {
             return `audio_${lang}_${locationId}.mp3`;
         }
@@ -166,7 +169,6 @@
                     const location = LOCATIONS[currentTargetIndex];
                     const distance = Math.round(getDistance(currentLat, currentLon, location.lat, location.lon));
 
-                    // 실시간 수신 정보 버튼에 표시
                     mainStartBtn.innerText = `🚌 수신 중 (오차 ±${accuracy}m) | 타겟: ${location.id}번`;
                     mainStartBtn.style.backgroundColor = "#00529b";
 
